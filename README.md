@@ -1,8 +1,24 @@
 # Permit Readiness Check
 
-Free beta: a pre-submission self-check for permit packages in Osceola County and Orange County, Florida.
+Free beta: a pre-submission self-check for permit packages in Florida counties and cities.
 
-Open `index.html` in any browser. Pick the county and the project type, drop in the package PDFs, and the app tells you what is missing and builds your checklist from what it found. Nothing uploads anywhere. Everything runs in your browser.
+Open `index.html` in any browser. Pick the jurisdiction and the project type, drop in the package PDFs, and the app tells you what is missing and builds your checklist from what it found. Nothing uploads anywhere. Everything runs in your browser.
+
+## V3: multi-file app, 12 jurisdictions (Oct 23, 2026)
+
+The app is no longer one big HTML file. It is a small static app:
+
+- `index.html`: page shell only.
+- `styles.css`: all styling.
+- `jurisdictions.js`: one profile object per jurisdiction (2 counties, 10 cities), plus the shared drawing-quality group. Each profile carries its portal, contact, checklist groups (each item with an optional evidence key), the missing-item messages keyed by evidence, and the jurisdiction-specific human prechecks.
+- `pdfcheck.js`: the PDF analysis engine (PDF.js text extraction, document-type classification, keyword evidence flags).
+- `app.js`: the UI flow (jurisdiction picker, dropzone, file chips with remove and re-analyze, results, checklist, print).
+
+To add a new city: copy one profile object in `jurisdictions.js`, fill in its portal, groups, missing messages and human notes from that city's own published pages, and it appears in the picker automatically. No other file changes.
+
+Covered jurisdictions: Osceola County, Orange County, City of Orlando, City of Tampa, City of Miami, City of Fort Lauderdale, City of Jacksonville, City of St. Petersburg, City of Port St. Lucie, City of Cape Coral, City of Tallahassee, City of West Palm Beach.
+
+Hosting note: this is a static app served by GitHub Pages, which cannot run PHP. A PHP version would need hosting that executes PHP (for example HostGator) and a reason to run code on the server; right now everything the app does runs in the browser, which is also what keeps the privacy promise (nothing uploads). If a server side is wanted later, `jurisdictions.js` is already pure data and can be served as JSON.
 
 ## V2: package first, checklist second (redesigned Oct 23, 2026)
 
