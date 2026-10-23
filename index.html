@@ -126,7 +126,7 @@
         <div class="stat"><b id="statMissing">0</b><span>items still missing</span></div>
       </div>
       <div class="panel missing" id="missingPanel">
-        <h3>Missing from your package</h3>
+        <h3 id="missingTitle">Missing from your package</h3>
         <ul id="missingList"></ul>
       </div>
       <div class="panel found">
@@ -423,16 +423,28 @@ function handleFiles(fileList) {
     var crossDups = Object.keys(allSheets).filter(function(s) { return allSheets[s].length > 1; });
     if (Object.keys(allSheets).length && !anyDup && !crossDups.length) packageEvidence.sheetPattern = true;
     var missing = [], found = [], human = [];
-    if (!packageEvidence.sitePlan) missing.push("Site plan: no file in this package looks like a site plan. It is required for both counties.");
-    if (!packageEvidence.energyForm) {
-      missing.push(countySel.value === "osceola"
-        ? "Energy compliance forms: none detected. Osceola requires them, signed and sealed by the design professional."
-        : "Energy calculations: none detected. Orange requires them when applicable, so confirm whether they apply to this project.");
+    if (!anyText) {
+      missing.push("This package has no extractable text layer (the drawings are images or vector lines, not searchable text), so the app could not search its contents. The items below are unverifiable from this file, not confirmed missing. A human must confirm each one.");
+      missing.push("Could not verify: site plan present.");
+      missing.push("Could not verify: energy forms or calculations present.");
+      if (countySel.value === "osceola") missing.push("Could not verify: Florida product approvals present.");
+      missing.push("Could not verify: documents signed and sealed.");
+      if (countySel.value === "orange") missing.push("Could not verify: wind criteria (Vult, Vasd) shown on the plans.");
+      if (countySel.value === "orange") missing.push("Could not verify: grading and drainage plan present.");
+      document.getElementById("missingTitle").textContent = "Could not verify from this package";
+    } else {
+      document.getElementById("missingTitle").textContent = "Missing from your package";
+      if (!packageEvidence.sitePlan) missing.push("Site plan: no file in this package looks like a site plan. It is required for both counties.");
+      if (!packageEvidence.energyForm) {
+        missing.push(countySel.value === "osceola"
+          ? "Energy compliance forms: none detected. Osceola requires them, signed and sealed by the design professional."
+          : "Energy calculations: none detected. Orange requires them when applicable, so confirm whether they apply to this project.");
+      }
+      if (countySel.value === "osceola" && !packageEvidence.productApproval) missing.push("Florida product approvals: none detected. Osceola requires approval sheets for windows, doors, roofing, shutters, panel walls and structural components.");
+      if (!anySeal && anyText) missing.push("Signed and sealed documents: no seal or signature signals found in any file. A human must verify every required document is actually signed and sealed.");
+      if (countySel.value === "orange" && !packageEvidence.windCriteria) missing.push("Wind criteria: no Vult, Vasd or wind speed values detected. Orange requires wind criteria on the plans (FBC-Residential 301).");
+      if (countySel.value === "orange" && !packageEvidence.gradingPlan) missing.push("Grading and drainage plan: none detected. Orange requires a lot grading and drainage plan with finished floor elevation.");
     }
-    if (countySel.value === "osceola" && !packageEvidence.productApproval) missing.push("Florida product approvals: none detected. Osceola requires approval sheets for windows, doors, roofing, shutters, panel walls and structural components.");
-    if (!anySeal && anyText) missing.push("Signed and sealed documents: no seal or signature signals found in any file. A human must verify every required document is actually signed and sealed.");
-    if (countySel.value === "orange" && !packageEvidence.windCriteria) missing.push("Wind criteria: no Vult, Vasd or wind speed values detected. Orange requires wind criteria on the plans (FBC-Residential 301).");
-    if (countySel.value === "orange" && !packageEvidence.gradingPlan) missing.push("Grading and drainage plan: none detected. Orange requires a lot grading and drainage plan with finished floor elevation.");
     results.forEach(function(r) {
       if (r.error) {
         human.push("File could not be read: " + r.name + ". Confirm it is a valid PDF and re-upload it.");
