@@ -2,7 +2,13 @@
 
 Free beta: a pre-submission self-check for permit packages in Osceola County and Orange County, Florida.
 
-Open `index.html` in any browser. Pick the county and the project type, tick off what your package has, and get a readiness report listing the gaps. Nothing uploads anywhere. Everything runs in your browser.
+Open `index.html` in any browser. Pick the county and the project type, drop in the package PDFs, and the app tells you what is missing and builds your checklist from what it found. Nothing uploads anywhere. Everything runs in your browser.
+
+## V2: package first, checklist second (redesigned Oct 23, 2026)
+
+The flow is now: pick county and project type, drop the package, get results. Analysis runs automatically on upload. The checklist is generated from the package: each requirement has an evidence rule (for example, a file that looks like an energy form checks the energy item, seal or signature signals check the signed-and-sealed items, detected sheet numbers with no duplicates check the sheet-numbering item), and matched items show a "Found in your package" badge. The user still confirms each auto-checked item by hand.
+
+Results show four stats (files analyzed, sheet numbers found, checklist items found in package, items still missing) plus three panels: Missing from your package (required document types and criteria not detected, phrased per county, with "when applicable" items flagged as confirm-whether-they-apply), Found in your package (per-file summaries), and Verify by hand (inconsistencies and items software cannot confirm).
 
 ## V1: upload the package
 
