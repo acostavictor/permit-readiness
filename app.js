@@ -242,6 +242,26 @@
   });
   projectSel.addEventListener("change", renderJurisdictionInfo);
 
+  var helpBtn = document.getElementById("helpBtn");
+  var helpModal = document.getElementById("helpModal");
+  var helpClose = document.getElementById("helpClose");
+  function openHelp() { helpModal.classList.add("open"); }
+  function closeHelp() { helpModal.classList.remove("open"); }
+  if (helpBtn) helpBtn.addEventListener("click", openHelp);
+  if (helpClose) helpClose.addEventListener("click", closeHelp);
+  if (helpModal) helpModal.addEventListener("click", function (e) { if (e.target === helpModal) closeHelp(); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeHelp(); });
+
+  var sourcesToggle = document.getElementById("sourcesToggle");
+  var sourcesBody = document.getElementById("sourcesBody");
+  var sourcesChevron = document.getElementById("sourcesChevron");
+  if (sourcesToggle) sourcesToggle.addEventListener("click", function () {
+    var show = sourcesBody.style.display === "none" || sourcesBody.style.display === "";
+    sourcesBody.style.display = show ? "" : "none";
+    sourcesChevron.textContent = show ? "▴" : "▾";
+    sourcesToggle.setAttribute("aria-expanded", show ? "true" : "false");
+  });
+
   renderJurisdictionSelect();
   renderJurisdictionInfo();
   renderChecklist();

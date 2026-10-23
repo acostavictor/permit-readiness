@@ -2,6 +2,20 @@
 * { box-sizing:border-box; }
 body { margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; color:var(--ink); background:var(--bg); }
 header { background:linear-gradient(135deg, var(--navy), var(--navy2)); color:#fff; padding:34px 20px 30px; }
+.brand-row { display:flex; align-items:center; gap:12px; margin-bottom:14px; }
+.logo { display:inline-flex; }
+.brand-name { font-size:22px; font-weight:800; letter-spacing:.01em; }
+.help-btn { margin-left:auto; background:transparent; color:#fff; border:1px solid rgba(255,255,255,.4); border-radius:999px; padding:8px 16px; font-size:14px; }
+.help-btn:hover { border-color:var(--cyan); color:var(--cyan); }
+.modal { display:none; position:fixed; inset:0; background:rgba(11,16,30,.6); z-index:50; align-items:flex-start; justify-content:center; padding:40px 16px; overflow-y:auto; }
+.modal.open { display:flex; }
+.modal-card { background:#fff; color:var(--ink); border-radius:16px; max-width:640px; width:100%; padding:26px; position:relative; }
+.modal-card h2 { margin:0 0 6px; }
+.modal-card h3 { margin:18px 0 4px; font-size:16px; }
+.modal-card p, .modal-card li { line-height:1.55; }
+.modal-close { position:absolute; top:12px; right:12px; background:#f1f5f9; border-radius:50%; width:34px; height:34px; padding:0; font-size:18px; color:var(--ink); }
+.sources-toggle { width:100%; text-align:left; background:#f8fafc; border:1px solid var(--line); color:var(--ink); font-size:16px; padding:14px 16px; display:flex; justify-content:space-between; align-items:center; }
+.sources-body { margin-top:14px; }
 .wrap { max-width:900px; margin:0 auto; }
 header h1 { margin:0 0 10px; font-size:32px; line-height:1.15; }
 header h1 span { color:var(--cyan); }
@@ -65,4 +79,4 @@ button { cursor:pointer; border:0; border-radius:10px; padding:12px 18px; font-s
 @keyframes fadein { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
 footer { padding:10px 20px 40px; color:var(--muted); font-size:13px; }
 footer a { color:#1d4ed8; }
-@media print { header, .actions, .no-print, .dropzone, .steps { display:none !important; } #results { display:block !important; } }
+@media print { header, .actions, .no-print, .dropzone, .steps, .modal { display:none !important; } #results { display:block !important; } }

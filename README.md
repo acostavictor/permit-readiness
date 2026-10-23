@@ -16,6 +16,8 @@ The app is no longer one big HTML file. It is a small static app:
 
 To add a new city: copy one profile object in `jurisdictions.js`, fill in its portal, groups, missing messages and human notes from that city's own published pages, and it appears in the picker automatically. No other file changes.
 
+Also in v3: a "How to use this" help button in the header (opens a short usage guide), the Sources list hidden behind a toggle button, and the Permit Validate logo (navy rounded tile, cyan permit sheet outline, white checkmark) in the header and as `logo.svg` for reuse.
+
 Covered jurisdictions: Osceola County, Orange County, City of Orlando, City of Tampa, City of Miami, City of Fort Lauderdale, City of Jacksonville, City of St. Petersburg, City of Port St. Lucie, City of Cape Coral, City of Tallahassee, City of West Palm Beach.
 
 Hosting note: this is a static app served by GitHub Pages, which cannot run PHP. A PHP version would need hosting that executes PHP (for example HostGator) and a reason to run code on the server; right now everything the app does runs in the browser, which is also what keeps the privacy promise (nothing uploads). If a server side is wanted later, `jurisdictions.js` is already pure data and can be served as JSON.

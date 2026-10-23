@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Permit Readiness Check - Florida Cities and Counties - Free Beta</title>
+<title>Permit Validate | Is your permit package ready?</title>
 <link rel="stylesheet" href="styles.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="jurisdictions.js"></script>
@@ -11,6 +11,11 @@
 </head>
 <body>
 <header><div class="wrap">
+  <div class="brand-row">
+    <span class="logo"><svg viewBox="0 0 64 64" width="44" height="44" aria-label="Permit Validate logo"><rect width="64" height="64" rx="14" fill="#0B101E"/><path d="M20 14 h16 l10 10 v26 a2 2 0 0 1 -2 2 h-24 a2 2 0 0 1 -2 -2 v-34 a2 2 0 0 1 2 -2 z" fill="none" stroke="#38BDF8" stroke-width="3"/><path d="M36 14 v10 h10" fill="none" stroke="#38BDF8" stroke-width="3"/><path d="M24 33 l6 6 12 -13" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+    <span class="brand-name">Permit Validate</span>
+    <button class="help-btn" id="helpBtn">How to use this</button>
+  </div>
   <div class="badge">FREE BETA</div>
   <h1>Is your permit package<br><span>ready for the county or city?</span></h1>
   <p>Drop in your package. The app checks it against your jurisdiction's requirements, tells you what is missing, and builds your checklist from what it found. Nothing uploads anywhere. Everything runs in your browser.</p>
@@ -95,8 +100,9 @@
     <div id="checklist"></div>
   </div>
 
-  <div class="card no-print">
-    <h2>Sources</h2>
+  <div class="card no-print sources-card">
+    <button class="sources-toggle" id="sourcesToggle" aria-expanded="false">Official sources <span id="sourcesChevron">▾</span></button>
+    <div id="sourcesBody" style="display:none">
     <p class="lede">Every jurisdiction's requirements above are drawn from its own published pages, checked October 2026. Adding a new city means adding one profile to jurisdictions.js, not rebuilding the app.</p>
     <ul>
       <li><a href="https://www.osceola.org/Doing-Business/Building-and-Permits/Apply-for-a-Building-Permit">Osceola County: Apply for a Building Permit</a></li>
@@ -113,12 +119,31 @@
       <li><a href="https://receiver-www.talgov.com/Uploads/Public/Documents/growth/checklists/check_res_building.pdf">City of Tallahassee: Residential Building Permit Checklist</a></li>
       <li><a href="https://www.wpb.org/Departments/Development-Services/Building-Division">City of West Palm Beach: Building Division</a></li>
     </ul>
+    </div>
   </div>
 
 </div></main>
 <footer><div class="wrap">
   <p>Free beta. Built as a companion to <a href="https://markupvalidate.com">Markup &amp; Validate</a>: the same idea, that nothing issues until a human checks it, applied to permit packages. Questions or corrections to a requirement: the jurisdiction's pages above are the authority.</p>
 </div></footer>
+<div class="modal" id="helpModal">
+  <div class="modal-card">
+    <button class="modal-close" id="helpClose" aria-label="Close guide">x</button>
+    <h2>How to use Permit Validate</h2>
+    <p>Three steps, about two minutes.</p>
+    <h3>1. Pick where it is going</h3>
+    <p>Choose the county or city that issues the permit. City permitting is separate from county permitting, so a property inside Orlando city limits goes to the City of Orlando, not Orange County Fast Track. The same applies in every city listed.</p>
+    <h3>2. Drop your package</h3>
+    <p>PDFs only: the drawing set plus supporting documents like the site plan, energy forms, product approvals, and truss drawings. Analysis starts on its own the moment you drop them. Nothing uploads anywhere. Everything runs in your browser. Click the X on a file to remove it and re-run the check.</p>
+    <h3>3. Read the results</h3>
+    <p><strong>Missing</strong> shows what the app could not find. <strong>Found</strong> shows what it did find, file by file. <strong>Verify by hand</strong> lists inconsistencies and anything software cannot confirm. Below that, your checklist fills itself in from the package: items marked "Found in your package" were auto-checked. Confirm each one yourself, tick the rest by hand, then close the gaps before you submit. Use Print this report for a copy to work from.</p>
+    <h3>Two things to know</h3>
+    <ul>
+      <li>If a PDF is a scan or has no text layer, the app says "Could not verify" instead of "missing." That means it could not read the file, not that the item is absent. A human must check those sheets.</li>
+      <li>The jurisdiction makes the final call. This is a pre-submission self-check, not a permit approval and not a code compliance review. When in doubt, check the jurisdiction's own pages, linked under Sources at the bottom of the page.</li>
+    </ul>
+  </div>
+</div>
 <script src="app.js"></script>
 </body>
 </html>
