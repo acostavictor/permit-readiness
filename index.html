@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Permit Readiness Check - Osceola and Orange County, FL - Free Beta</title>
+<style>
+  :root { --navy:#0B101E; --cyan:#38BDF8; --ink:#1f2937; --muted:#6b7280; --line:#dbe2ea; --bg:#f4f7fa; --ok:#15803d; --warn:#b45309; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; color:var(--ink); background:var(--bg); }
+  header { background:var(--navy); color:#fff; padding:28px 20px; }
+  header .wrap, main .wrap, footer .wrap { max-width:860px; margin:0 auto; }
+  header h1 { margin:0 0 8px; font-size:28px; line-height:1.2; }
+  header h1 span { color:var(--cyan); }
+  header p { margin:4px 0; color:#cbd5e1; }
+  .badge { display:inline-block; background:var(--cyan); color:var(--navy); font-weight:700; font-size:12px; letter-spacing:.08em; padding:4px 10px; border-radius:999px; margin-bottom:10px; }
+  .disclaimer { background:#fff7ed; border:1px solid #fed7aa; border-radius:10px; padding:14px 16px; margin:20px 0; }
+  .disclaimer strong { color:var(--warn); }
+  .card { background:#fff; border:1px solid var(--line); border-radius:12px; padding:20px; margin:0 0 16px; }
+  .card h2 { margin:0 0 6px; font-size:20px; }
+  .card p.lede { color:var(--muted); margin:0 0 14px; }
+  .row { display:flex; flex-wrap:wrap; gap:12px; }
+  .field { flex:1 1 240px; }
+  label { display:block; font-weight:600; margin-bottom:6px; }
+  select { width:100%; padding:10px; border:1px solid var(--line); border-radius:8px; font-size:16px; }
+  .county-info { background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:12px 14px; margin-top:14px; }
+  .county-info a { color:#1d4ed8; }
+  .note { background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:12px 14px; margin-top:14px; }
+  .meter { height:14px; background:#e5e7eb; border-radius:999px; overflow:hidden; }
+  .meter > div { height:100%; background:var(--cyan); width:0%; transition:width .2s; }
+  .meter-label { font-weight:700; margin:8px 0 0; }
+  .group { margin-top:22px; }
+  .group h3 { margin:0 0 4px; font-size:17px; border-bottom:2px solid var(--navy); padding-bottom:6px; }
+  .group p.src { color:var(--muted); font-size:13px; margin:0 0 10px; }
+  .item { display:flex; gap:10px; padding:10px 0; border-bottom:1px solid #eef2f7; align-items:flex-start; }
+  .item input { margin-top:3px; transform:scale(1.25); }
+  .item label { font-weight:400; margin:0; }
+  .item .tag { flex:none; font-size:11px; font-weight:700; padding:2px 8px; border-radius:999px; background:#e0f2fe; color:#075985; }
+  .actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:16px; }
+  button { cursor:pointer; border:0; border-radius:8px; padding:12px 18px; font-size:15px; font-weight:700; }
+  .primary { background:var(--cyan); color:var(--navy); }
+  .ghost { background:#fff; border:1px solid var(--line); color:var(--ink); }
+  #report { display:none; }
+  #report h3 { margin:16px 0 6px; }
+  .gap { color:#b91c1c; }
+  .done { color:var(--ok); }
+  footer { padding:10px 20px 40px; color:var(--muted); font-size:13px; }
+  footer a { color:#1d4ed8; }
+  @media print { header, .actions, .no-print { display:none !important; } #report { display:block !important; } }
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <div class="badge">FREE BETA</div>
+  <h1>Permit Readiness Check<br><span>Osceola and Orange County, FL</span></h1>
+  <p>Run a pre-submission self-check on your permit package before you file it. Nothing uploads anywhere. Everything runs in your browser.</p>
+</div></header>
+<main><div class="wrap">
+
+  <div class="disclaimer"><strong>What this is not.</strong> This is a pre-submission self-check, not a permit approval, not a code compliance review, and not a substitute for the county's plan review or your design professional's seal. Requirements change. Always confirm against the county's own pages before you submit.</div>
+
+  <div class="card">
+    <h2>1. Where is the project?</h2>
+    <p class="lede">Pick the county that issues the permit. If the property is inside Orlando city limits, that is a different office (City of Orlando permitting), not Orange County Fast Track.</p>
+    <div class="row">
+      <div class="field">
+        <label for="county">County</label>
+        <select id="county">
+          <option value="osceola">Osceola County</option>
+          <option value="orange">Orange County</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="project">Project type</label>
+        <select id="project">
+          <option value="residential">Residential new / addition</option>
+          <option value="accessory">Accessory structure (shed, garage, carport, deck)</option>
+          <option value="commercial">Commercial</option>
+          <option value="quick">Roofing, re-roof, A/C or water heater change-out</option>
+        </select>
+      </div>
+    </div>
+    <div class="county-info" id="countyInfo"></div>
+    <div class="note" id="projectNote" style="display:none"></div>
+  </div>
+
+  <div class="card">
+    <h2>2. Check your package</h2>
+    <p class="lede">Tick each item you have ready. Items marked COUNTY come from the county's own published pages. Items marked DRAWING are drawing-quality checks reused from Markup &amp; Validate.</p>
+    <div class="meter"><div id="meterFill"></div></div>
+    <p class="meter-label" id="meterLabel">0 of 0 confirmed</p>
+    <div id="checklist"></div>
+    <div class="actions no-print">
+      <button class="primary" id="reportBtn">Generate readiness report</button>
+      <button class="ghost" id="resetBtn">Reset checklist</button>
+    </div>
+  </div>
+
+  <div class="card" id="report">
+    <h2>Readiness report</h2>
+    <p class="lede" id="reportSub"></p>
+    <h3 class="done">Confirmed</h3>
+    <ul id="reportDone"></ul>
+    <h3 class="gap">Gaps to close before you submit</h3>
+    <ul id="reportGaps"></ul>
+    <h3>Next steps</h3>
+    <ol id="reportNext"></ol>
+    <div class="actions no-print"><button class="ghost" onclick="window.print()">Print this report</button></div>
+  </div>
+
+  <div class="card no-print">
+    <h2>Sources</h2>
+    <p class="lede">Every county requirement above is drawn from these official pages, checked October 2026.</p>
+    <ul>
+      <li><a href="https://www.osceola.org/Doing-Business/Building-and-Permits/Apply-for-a-Building-Permit">Osceola County: Apply for a Building Permit</a></li>
+      <li><a href="https://www.osceola.org/Doing-Business/Building-and-Permits/Building-Office-Plan-Review/Frequent-Omissions">Osceola County: Frequent Omissions</a></li>
+      <li><a href="https://www.orangecountyfl.net/PermitsLicenses/Permits/ResidentialAccessoryStructures.aspx">Orange County: Residential Accessory Structures, minimum submission requirements</a></li>
+      <li><a href="https://Orangecountyfl.net/Portals/0/resource library/permits - licenses/A Guide for Residential Plan Approval-CERT.pdf">Orange County: Residential Building Code Plan Review Checklist (PDF)</a></li>
+      <li><a href="https://ocfl.net/PermitsLicenses/One-StopPermittingServices.aspx">Orange County: One-Stop Permitting Services (Fast Track)</a></li>
+      <li><a href="https://engageorange.ocfl.net/fast-track-permitting-services/widgets/118242/faqs">Orange County Fast Track: Permitting FAQs</a></li>
+    </ul>
+  </div>
+
+</div></main>
+<footer><div class="wrap">
+  <p>Free beta. Built as a companion to <a href="https://markupvalidate.com">Markup &amp; Validate</a>: the same idea, that nothing issues until a human checks it, applied to permit packages. Questions or corrections to a requirement: the county pages above are the authority.</p>
+</div></footer>
+<script>
+var DATA = {
+  osceola: {
+    name: "Osceola County",
+    portal: "Online Permit Center: permits.osceola.org",
+    portalUrl: "https://www.osceola.org/Doing-Business/Building-and-Permits/Apply-for-a-Building-Permit",
+    phone: "Building office: 407-742-0200",
+    groups: [
+      { title: "Application package", src: "Osceola County published pages", items: [
+        "Project address confirmed (new address: 911 Addressing Office, 407-742-5911)",
+        "Parcel ID confirmed via the Property Appraiser search",
+        "Owner and contractor information complete",
+        "Building plans digitally signed and sealed by an architect or engineer (online submittal)",
+        "Florida Product Approval sheets ready (windows, doors, roofing, shutters, panel walls, structural components)",
+        "Owner-Builder Statement/Affidavit ready, only if the owner acts as own contractor (delivered in person or by mail, not online)"
+      ]},
+      { title: "Site plan: the county's frequent omissions", src: "Osceola County Frequent Omissions page", items: [
+        "Accessible route from the building to the public way",
+        "Accessible route on accessible exits, from the back of the building to an accessible sidewalk on front",
+        "Sidewalks on accessible means of egress, minimum 44 inches",
+        "Passing area of 60 inches minimum every 200 ft of accessible route",
+        "Accessible parking distributed throughout the entire parking area",
+        "Accessible parking width of 12 ft on center of markings",
+        "Signage on accessible parking indicating a maximum fine of $250.00 per FS 316.008",
+        "Detectable warnings on curb ramps covering the full length and width",
+        "Dissimilar textures on curb ramp surfaces (raised strips or exposed aggregate)",
+        "Distinctive color on curb ramp surfaces",
+        "Detectable warnings on blended curbs, 36 inches minimum width"
+      ]},
+      { title: "Application package: more frequent omissions", src: "Osceola County Frequent Omissions page", items: [
+        "Energy compliance forms signed and sealed by the design professional and signed by the owner representative (commercial) or signed by the owner representative (residential)",
+        "Soil analysis report signed and sealed by a professional engineer (commercial)",
+        "Engineered roof truss drawings signed and sealed by a professional engineer",
+        "Manufacturer data, installation instructions, letter of approval or notice of acceptance for envelope products (windows, exterior doors, skylights, roofing, panel walls, structural components, innovative products)",
+        "Engineered structural drawings for metal buildings, signed and sealed by a professional engineer",
+        "Engineered structural drawings for steel stairs, signed and sealed by a professional engineer"
+      ]}
+    ]
+  },
+  orange: {
+    name: "Orange County",
+    portal: "Fast Track Online Services (one set of electronically signed and sealed documents; PDF files only)",
+    portalUrl: "https://ocfl.net/PermitsLicenses/One-StopPermittingServices.aspx",
+    phone: "Fast Track Customer Service: EPlanCOM@ocfl.net or 407-836-8160",
+    groups: [
+      { title: "Application package", src: "Orange County Fast Track pages", items: [
+        "One set of electronically signed and sealed construction documents",
+        "PDF files only, with file names following the Fast Track User Guide naming conventions",
+        "Property address and parcel confirmed",
+        "Owner and contractor information complete"
+      ]},
+      { title: "Site plan", src: "Orange County published pages and plan review checklist", items: [
+        "Site plan or survey showing the location of the proposed structure (zoning questions: Zoning@ocfl.net or 407-836-3111)",
+        "Site plan includes septic tank and drain field location, if applicable",
+        "Site plan and building plan correspond (FBC 107)",
+        "Lot grading and drainage plan and finished floor elevation (development engineering: 407-836-3111)",
+        "Orientation of the structure is the same on the site plan and on all plan pages (flipped or mirror-imaged plans are not acceptable, FBC 107)"
+      ]},
+      { title: "Drawings and engineering", src: "Orange County published pages and plan review checklist", items: [
+        "Construction plans prepared by a Florida licensed professional engineer or registered architect, per the current Residential Florida Building Code",
+        "All documents properly signed, dated and sealed as required for the method of submittal",
+        "Wind criteria shown: ultimate design wind speed (Vult) and 3-second gust / nominal wind speed (Vasd) in mph, wind exposure, and risk category (FBC-Residential 301)",
+        "Live loads documented (uninhabitable attic without storage 10 psf, with limited storage 20 psf, habitable attics and attics served with fixed stairs 30 psf)",
+        "Mechanical, electrical and plumbing layouts, when applicable",
+        "Energy calculations, when applicable",
+        "Truss engineering by a Florida licensed professional engineer or registered architect as part of the initial review, when applicable, and the manufacturer truss layout matches the roof framing plans"
+      ]}
+    ]
+  }
+};
+var DRAWING = { title: "Drawing quality", src: "Checks reused from Markup & Validate (drawing quality, not code compliance)", items: [
+  "Title block complete on every sheet (project, sheet number and title, date, scale, drawn by, checked by)",
+  "Sheet numbers follow one pattern, no duplicates",
+  "All required sheets present",
+  "Annotation text meets minimum plotted text height (1/8 inch)",
+  "Revision clouds have register entries",
+  "Dimensions agree with the geometry they annotate",
+  "Schedule values match the values the model and tags actually carry"
+]};
+var countySel = document.getElementById("county");
+var projectSel = document.getElementById("project");
+var infoEl = document.getElementById("countyInfo");
+var noteEl = document.getElementById("projectNote");
+var listEl = document.getElementById("checklist");
+var meterFill = document.getElementById("meterFill");
+var meterLabel = document.getElementById("meterLabel");
+function render() {
+  var c = DATA[countySel.value];
+  infoEl.innerHTML = "<strong>" + c.name + ".</strong> " + c.portal + ". " + c.phone + '. <a href="' + c.portalUrl + '">Official page</a>';
+  var p = projectSel.value;
+  noteEl.style.display = "none";
+  if (c === DATA.osceola && p === "quick") {
+    noteEl.style.display = "block";
+    noteEl.innerHTML = "<strong>Quick permits in Osceola County:</strong> residential roofing, re-roofing, A/C change-outs and water heater / plumbing change-outs can be issued immediately online or over the counter, and only require the Florida product approvals. The full checklist below still helps, but the approvals are the gating item.";
+  }
+  if (c === DATA.orange && p === "accessory") {
+    noteEl.style.display = "block";
+    noteEl.innerHTML = "<strong>Accessory structures in Orange County:</strong> the minimum submission is a site plan or survey, a lot grading and drainage plan with finished floor elevation, and construction plans by a Florida licensed professional. The full checklist below covers those plus the plan review items.";
+  }
+  var groups = c.groups.concat([DRAWING]);
+  var html = "";
+  groups.forEach(function(g, gi) {
+    html += '<div class="group"><h3>' + g.title + '</h3><p class="src">' + g.src + '</p>';
+    g.items.forEach(function(it, ii) {
+      var id = "c" + gi + "_" + ii;
+      var tag = (g === DRAWING) ? "DRAWING" : "COUNTY";
+      html += '<div class="item"><input type="checkbox" id="' + id + '" data-text="' + it.replace(/"/g, "&quot;") + '"><label for="' + id + '">' + it + '</label><span class="tag">' + tag + '</span></div>';
+    });
+    html += "</div>";
+  });
+  listEl.innerHTML = html;
+  listEl.querySelectorAll("input").forEach(function(box) { box.addEventListener("change", updateMeter); });
+  updateMeter();
+}
+function updateMeter() {
+  var boxes = listEl.querySelectorAll("input");
+  var done = listEl.querySelectorAll("input:checked").length;
+  meterFill.style.width = (boxes.length ? Math.round(done / boxes.length * 100) : 0) + "%";
+  meterLabel.textContent = done + " of " + boxes.length + " confirmed";
+}
+document.getElementById("resetBtn").addEventListener("click", function() {
+  listEl.querySelectorAll("input").forEach(function(b) { b.checked = false; });
+  document.getElementById("report").style.display = "none";
+  updateMeter();
+});
+document.getElementById("reportBtn").addEventListener("click", function() {
+  var c = DATA[countySel.value];
+  var done = [], gaps = [];
+  listEl.querySelectorAll("input").forEach(function(b) {
+    (b.checked ? done : gaps).push(b.getAttribute("data-text"));
+  });
+  document.getElementById("reportSub").textContent = c.name + " - " + projectSel.options[projectSel.selectedIndex].text + ". " + done.length + " of " + (done.length + gaps.length) + " items confirmed.";
+  document.getElementById("reportDone").innerHTML = done.length ? done.map(function(t) { return "<li>" + t + "</li>"; }).join("") : "<li>None yet.</li>";
+  document.getElementById("reportGaps").innerHTML = gaps.length ? gaps.map(function(t) { return "<li>" + t + "</li>"; }).join("") : "<li>None. Package looks complete against this checklist. The county still makes the final call.</li>";
+  var next = [
+    "Close every gap above, then re-run this check.",
+    "Submit through the county portal: " + c.portal + " (" + c.phone + ").",
+    "Keep the approved set on the jobsite once issued, and schedule inspections at each phase."
+  ];
+  document.getElementById("reportNext").innerHTML = next.map(function(t) { return "<li>" + t + "</li>"; }).join("");
+  var r = document.getElementById("report");
+  r.style.display = "block";
+  r.scrollIntoView({ behavior: "smooth" });
+});
+countySel.addEventListener("change", render);
+projectSel.addEventListener("change", render);
+render();
+</script>
+</body>
+</html>
