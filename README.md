@@ -4,6 +4,16 @@ Free beta: a pre-submission self-check for permit packages in Osceola County and
 
 Open `index.html` in any browser. Pick the county and the project type, tick off what your package has, and get a readiness report listing the gaps. Nothing uploads anywhere. Everything runs in your browser.
 
+## V1: upload the package
+
+Step 3 accepts PDFs. The app reads each PDF's text in the browser (PDF.js from cdnjs) and checks it against the county list, then reports:
+
+- Per file: page count, page sizes, sheet numbers found (A-101 form), title block keyword signals, smallest text size (estimate), and a best-guess document type (site plan, energy form, product approval, truss drawing, structural).
+- Cross-file inconsistencies, listed as human prechecks: duplicate sheet numbers inside one file or across files, a missing site plan, a missing energy form, a missing product approval (Osceola), no seal or signature signals anywhere, mixed page sizes, and scanned files with no extractable text (text checks cannot run on those).
+- County-specific human checks that software cannot reliably confirm: structure orientation matching the site plan on all pages (Orange County, FBC 107), wind criteria (Orange), accessible route and parking items (Osceola).
+
+Automated findings are heuristic, keyword and text signals, not proof. Every flagged item needs a human to confirm it. The county still makes the final call.
+
 ## What this is not
 
 This is a pre-submission self-check, not a permit approval, not a code compliance review, and not a substitute for the county's plan review or your design professional's seal. Requirements change. Always confirm against the county's own pages before you submit.

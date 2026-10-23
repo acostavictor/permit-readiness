@@ -44,20 +44,24 @@
   #report h3 { margin:16px 0 6px; }
   .gap { color:#b91c1c; }
   .done { color:var(--ok); }
+  table { width:100%; border-collapse:collapse; margin-top:10px; font-size:14px; }
+  th, td { text-align:left; padding:8px 6px; border-bottom:1px solid #eef2f7; vertical-align:top; }
+  .status { font-size:13px; color:var(--muted); margin-top:10px; }
   footer { padding:10px 20px 40px; color:var(--muted); font-size:13px; }
   footer a { color:#1d4ed8; }
   @media print { header, .actions, .no-print { display:none !important; } #report { display:block !important; } }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </head>
 <body>
 <header><div class="wrap">
   <div class="badge">FREE BETA</div>
   <h1>Permit Readiness Check<br><span>Osceola and Orange County, FL</span></h1>
-  <p>Run a pre-submission self-check on your permit package before you file it. Nothing uploads anywhere. Everything runs in your browser.</p>
+  <p>Run a pre-submission self-check on your permit package before you file it. Upload the package and the app checks it, then lists what a human still has to verify. Nothing uploads anywhere. Everything runs in your browser.</p>
 </div></header>
 <main><div class="wrap">
 
-  <div class="disclaimer"><strong>What this is not.</strong> This is a pre-submission self-check, not a permit approval, not a code compliance review, and not a substitute for the county's plan review or your design professional's seal. Requirements change. Always confirm against the county's own pages before you submit.</div>
+  <div class="disclaimer"><strong>What this is not.</strong> This is a pre-submission self-check, not a permit approval, not a code compliance review, and not a substitute for the county's plan review or your design professional's seal. Automated findings are heuristic: keyword and text signals from your PDFs, not proof. Every flagged item needs a human to confirm it. Requirements change. Always confirm against the county's own pages before you submit.</div>
 
   <div class="card">
     <h2>1. Where is the project?</h2>
@@ -90,18 +94,32 @@
     <div class="meter"><div id="meterFill"></div></div>
     <p class="meter-label" id="meterLabel">0 of 0 confirmed</p>
     <div id="checklist"></div>
+  </div>
+
+  <div class="card">
+    <h2>3. Upload your permit package (PDFs only)</h2>
+    <p class="lede">Drop in the drawing set and the supporting documents: site plan, energy forms, product approvals, truss drawings. The app reads the text of each PDF in your browser and checks it against the county list. If a PDF is a scan with no extractable text, the text checks cannot run on it and it goes on the human list.</p>
+    <input type="file" id="fileInput" accept=".pdf" multiple>
+    <p class="status" id="fileStatus">No package uploaded yet. The checklist above works on its own.</p>
+    <div id="packageTable"></div>
     <div class="actions no-print">
       <button class="primary" id="reportBtn">Generate readiness report</button>
-      <button class="ghost" id="resetBtn">Reset checklist</button>
+      <button class="ghost" id="resetBtn">Reset checklist and package</button>
     </div>
   </div>
 
   <div class="card" id="report">
     <h2>Readiness report</h2>
     <p class="lede" id="reportSub"></p>
-    <h3 class="done">Confirmed</h3>
+    <h3>Package files</h3>
+    <div id="reportFiles"></div>
+    <h3>Automated findings</h3>
+    <ul id="reportAuto"></ul>
+    <h3>Human prechecks: inconsistencies and items to verify by hand</h3>
+    <ul id="reportHuman"></ul>
+    <h3 class="done">Checklist confirmed</h3>
     <ul id="reportDone"></ul>
-    <h3 class="gap">Gaps to close before you submit</h3>
+    <h3 class="gap">Checklist gaps to close before you submit</h3>
     <ul id="reportGaps"></ul>
     <h3>Next steps</h3>
     <ol id="reportNext"></ol>
@@ -126,6 +144,9 @@
   <p>Free beta. Built as a companion to <a href="https://markupvalidate.com">Markup &amp; Validate</a>: the same idea, that nothing issues until a human checks it, applied to permit packages. Questions or corrections to a requirement: the county pages above are the authority.</p>
 </div></footer>
 <script>
+if (window.pdfjsLib) {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+}
 var DATA = {
   osceola: {
     name: "Osceola County",
@@ -211,6 +232,13 @@ var noteEl = document.getElementById("projectNote");
 var listEl = document.getElementById("checklist");
 var meterFill = document.getElementById("meterFill");
 var meterLabel = document.getElementById("meterLabel");
+var fileInput = document.getElementById("fileInput");
+var fileStatus = document.getElementById("fileStatus");
+var packageTable = document.getElementById("packageTable");
+var packageResults = [];
+function esc(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
 function render() {
   var c = DATA[countySel.value];
   infoEl.innerHTML = "<strong>" + c.name + ".</strong> " + c.portal + ". " + c.phone + '. <a href="' + c.portalUrl + '">Official page</a>';
@@ -231,7 +259,7 @@ function render() {
     g.items.forEach(function(it, ii) {
       var id = "c" + gi + "_" + ii;
       var tag = (g === DRAWING) ? "DRAWING" : "COUNTY";
-      html += '<div class="item"><input type="checkbox" id="' + id + '" data-text="' + it.replace(/"/g, "&quot;") + '"><label for="' + id + '">' + it + '</label><span class="tag">' + tag + '</span></div>';
+      html += '<div class="item"><input type="checkbox" id="' + id + '" data-text="' + esc(it) + '"><label for="' + id + '">' + it + '</label><span class="tag">' + tag + '</span></div>';
     });
     html += "</div>";
   });
@@ -245,8 +273,101 @@ function updateMeter() {
   meterFill.style.width = (boxes.length ? Math.round(done / boxes.length * 100) : 0) + "%";
   meterLabel.textContent = done + " of " + boxes.length + " confirmed";
 }
+function classifyFile(name, text) {
+  var n = name.toLowerCase(), t = text.toLowerCase();
+  var hay = n + " " + t;
+  var types = [];
+  if (hay.indexOf("site plan") >= 0 || hay.indexOf("siteplan") >= 0) types.push("site plan");
+  if (hay.indexOf("energy") >= 0 || hay.indexOf("rescheck") >= 0 || hay.indexOf("comcheck") >= 0 || hay.indexOf("form 600") >= 0) types.push("energy form");
+  if (hay.indexOf("product approval") >= 0 || hay.indexOf("notice of acceptance") >= 0 || hay.indexOf("noa") >= 0) types.push("product approval");
+  if (hay.indexOf("truss") >= 0) types.push("truss drawing");
+  if (hay.indexOf("structural") >= 0) types.push("structural");
+  return types;
+}
+function analyzeOne(file) {
+  return file.arrayBuffer().then(function(buf) {
+    return pdfjsLib.getDocument({ data: buf }).promise.then(function(pdf) {
+      var pageJobs = [];
+      for (var i = 1; i <= pdf.numPages; i++) {
+        pageJobs.push(pdf.getPage(i).then(function(page) {
+          return page.getTextContent().then(function(tc) {
+            var v = page.getViewport({ scale: 1 });
+            var minFont = null;
+            var strs = tc.items.map(function(it) {
+              var tr = it.transform || [0, 0, 0, 0, 0, 0];
+              var size = Math.sqrt(tr[0] * tr[0] + tr[1] * tr[1]);
+              if (size > 0 && (minFont === null || size < minFont)) minFont = size;
+              return it.str;
+            });
+            return { text: strs.join(" "), wIn: v.width / 72, hIn: v.height / 72, minFont: minFont };
+          });
+        }));
+      }
+      return Promise.all(pageJobs).then(function(pages) {
+        var text = pages.map(function(p) { return p.text; }).join(" ");
+        var sizes = {};
+        pages.forEach(function(p) {
+          sizes[Math.round(p.wIn * 10) / 10 + "x" + Math.round(p.hIn * 10) / 10] = true;
+        });
+        var fonts = pages.map(function(p) { return p.minFont; }).filter(function(f) { return f !== null; });
+        var minFont = fonts.length ? Math.min.apply(null, fonts) : null;
+        var sheets = text.match(/\b[ACGMEPST]-\d{3}\b/g) || [];
+        var uniqSheets = [];
+        sheets.forEach(function(s) { if (uniqSheets.indexOf(s) < 0) uniqSheets.push(s); });
+        var dupSheets = [];
+        var counts = {};
+        sheets.forEach(function(s) { counts[s] = (counts[s] || 0) + 1; if (counts[s] === 2) dupSheets.push(s); });
+        var low = text.toLowerCase();
+        var signals = ["project", "sheet", "scale", "drawn", "checked", "date"];
+        var foundSignals = signals.filter(function(w) { return low.indexOf(w) >= 0; }).length;
+        var seal = /(seal|signed|signature|licensed|p\.e\.|r\.a\.)/i.test(text);
+        return {
+          name: file.name, pages: pdf.numPages, textChars: text.length,
+          sizes: Object.keys(sizes), minFont: minFont,
+          sheets: uniqSheets, dupSheets: dupSheets,
+          titleSignals: foundSignals, sealSignal: seal,
+          types: classifyFile(file.name, text), text: text
+        };
+      });
+    });
+  });
+}
+fileInput.addEventListener("change", function() {
+  var files = Array.prototype.slice.call(fileInput.files || []);
+  var pdfs = files.filter(function(f) { return f.name.toLowerCase().indexOf(".pdf") === f.name.length - 4; });
+  var skipped = files.length - pdfs.length;
+  if (!window.pdfjsLib) {
+    fileStatus.textContent = "The PDF engine did not load. Check your connection and retry. The checklist above still works.";
+    return;
+  }
+  if (!pdfs.length) {
+    fileStatus.textContent = "No PDFs selected. This beta reads PDFs only.";
+    return;
+  }
+  fileStatus.textContent = "Reading " + pdfs.length + " PDF(s) in your browser...";
+  var jobs = pdfs.map(function(f) {
+    return analyzeOne(f).catch(function() {
+      return { name: f.name, pages: 0, textChars: 0, sizes: [], minFont: null, sheets: [], dupSheets: [], titleSignals: 0, sealSignal: false, types: [], error: true };
+    });
+  });
+  Promise.all(jobs).then(function(results) {
+    packageResults = results;
+    var rows = results.map(function(r) {
+      var typeTxt = r.types.length ? r.types.join(", ") : "drawing set (default)";
+      var sheetTxt = r.sheets.length ? r.sheets.join(", ") : "none detected";
+      var note = r.error ? "could not be read" : (r.textChars === 0 ? "no extractable text (scan?)" : r.pages + " pages, " + r.sizes.join(" / ") + " in");
+      return "<tr><td>" + esc(r.name) + "</td><td>" + esc(typeTxt) + "</td><td>" + esc(sheetTxt) + "</td><td>" + esc(note) + "</td></tr>";
+    }).join("");
+    packageTable.innerHTML = "<table><tr><th>File</th><th>Looks like</th><th>Sheet numbers found</th><th>Notes</th></tr>" + rows + "</table>";
+    fileStatus.textContent = "Package read: " + results.length + " file(s). " + (skipped ? skipped + " non-PDF file(s) skipped. " : "") + "Generate the report for findings and human prechecks.";
+  });
+});
 document.getElementById("resetBtn").addEventListener("click", function() {
   listEl.querySelectorAll("input").forEach(function(b) { b.checked = false; });
+  fileInput.value = "";
+  packageResults = [];
+  packageTable.innerHTML = "";
+  fileStatus.textContent = "No package uploaded yet. The checklist above works on its own.";
   document.getElementById("report").style.display = "none";
   updateMeter();
 });
@@ -256,15 +377,86 @@ document.getElementById("reportBtn").addEventListener("click", function() {
   listEl.querySelectorAll("input").forEach(function(b) {
     (b.checked ? done : gaps).push(b.getAttribute("data-text"));
   });
-  document.getElementById("reportSub").textContent = c.name + " - " + projectSel.options[projectSel.selectedIndex].text + ". " + done.length + " of " + (done.length + gaps.length) + " items confirmed.";
-  document.getElementById("reportDone").innerHTML = done.length ? done.map(function(t) { return "<li>" + t + "</li>"; }).join("") : "<li>None yet.</li>";
-  document.getElementById("reportGaps").innerHTML = gaps.length ? gaps.map(function(t) { return "<li>" + t + "</li>"; }).join("") : "<li>None. Package looks complete against this checklist. The county still makes the final call.</li>";
+  document.getElementById("reportSub").textContent = c.name + " - " + projectSel.options[projectSel.selectedIndex].text + ". " + done.length + " checklist items confirmed, " + packageResults.length + " package file(s) analyzed.";
+  var auto = [], human = [];
+  if (!packageResults.length) {
+    auto.push("No package uploaded. Upload the PDFs to run the file checks.");
+  } else {
+    var allSheets = {};
+    var allTypes = {};
+    var anySeal = false, anyText = false, sizeSet = {};
+    packageResults.forEach(function(r) {
+      if (r.error) {
+        human.push("File could not be read: " + r.name + ". Confirm it is a valid PDF and re-upload it.");
+        return;
+      }
+      if (r.textChars === 0) {
+        human.push("No extractable text in " + r.name + ". It may be a scan. Text-based checks cannot run on it, so a human must review every sheet.");
+      } else {
+        anyText = true;
+      }
+      auto.push(r.name + ": " + r.pages + " pages, " + r.sizes.join(" / ") + " in, " + r.titleSignals + " of 6 title block signals found (project, sheet, scale, drawn, checked, date).");
+      if (r.minFont !== null) {
+        auto.push(r.name + ": smallest text found is about " + Math.round(r.minFont * 10) / 10 + " pt (estimate). A human confirms it against the 1/8 inch plotted minimum.");
+      }
+      if (r.dupSheets.length) {
+        human.push("Duplicate sheet number inside " + r.name + ": " + r.dupSheets.join(", ") + ". Confirm which sheet is current.");
+      }
+      r.sheets.forEach(function(s) {
+        if (!allSheets[s]) allSheets[s] = [];
+        allSheets[s].push(r.name);
+      });
+      r.types.forEach(function(t) { allTypes[t] = true; });
+      if (r.sealSignal) anySeal = true;
+      r.sizes.forEach(function(s) { sizeSet[s] = true; });
+    });
+    Object.keys(allSheets).forEach(function(s) {
+      if (allSheets[s].length > 1) {
+        human.push("Sheet number " + s + " appears in more than one file (" + allSheets[s].join(", ") + "). Confirm which file is current before submitting.");
+      }
+    });
+    if (!allTypes["site plan"]) {
+      human.push("No file in this package looks like a site plan. Confirm the site plan is included, it is required for both counties.");
+    }
+    if (!allTypes["energy form"]) {
+      human.push("No file in this package looks like an energy form (energy calculations, REScheck, COMcheck, Form 600). Osceola requires energy compliance forms; Orange requires energy calculations when applicable. Confirm whether they apply and are included.");
+    }
+    if (countySel.value === "osceola" && !allTypes["product approval"]) {
+      human.push("No file in this package looks like a Florida product approval. Osceola requires product approval sheets for windows, doors, roofing, shutters, panel walls and structural components.");
+    }
+    if (!anySeal && anyText) {
+      human.push("No seal or signature signals found in any file. This is a text signal only, not proof. A human must verify every required document is signed and sealed.");
+    }
+    if (Object.keys(sizeSet).length > 1) {
+      human.push("Mixed page sizes detected across the package (" + Object.keys(sizeSet).join(", ") + " in). Confirm all sheets match the size you intend to submit.");
+    }
+    if (countySel.value === "orange") {
+      human.push("Orange County (FBC 107): confirm the structure orientation on the site plan matches every plan page. Flipped or mirror-imaged plans are not acceptable, and software cannot reliably confirm this.");
+      human.push("Orange County: confirm wind criteria (Vult and Vasd in mph, wind exposure, risk category) appear on the plans.");
+    }
+    if (countySel.value === "osceola") {
+      human.push("Osceola County: confirm accessible route, parking and curb ramp items from the frequent omissions list against the site plan by hand.");
+    }
+    human.push("Title block signals above are keyword matches only. A human confirms every title block is actually complete on every sheet.");
+    if (!human.length) {
+      human.push("No inconsistencies detected by the automated checks. That is not an approval: the county still makes the final call.");
+    }
+  }
+  document.getElementById("reportFiles").innerHTML = packageResults.length
+    ? "<table><tr><th>File</th><th>Looks like</th><th>Sheets</th></tr>" + packageResults.map(function(r) {
+        return "<tr><td>" + esc(r.name) + "</td><td>" + esc(r.types.length ? r.types.join(", ") : "drawing set (default)") + "</td><td>" + esc(r.sheets.length ? r.sheets.join(", ") : "none detected") + "</td></tr>";
+      }).join("") + "</table>"
+    : "<p>No package uploaded.</p>";
+  document.getElementById("reportAuto").innerHTML = auto.map(function(t) { return "<li>" + esc(t) + "</li>"; }).join("");
+  document.getElementById("reportHuman").innerHTML = human.map(function(t) { return "<li>" + esc(t) + "</li>"; }).join("");
+  document.getElementById("reportDone").innerHTML = done.length ? done.map(function(t) { return "<li>" + esc(t) + "</li>"; }).join("") : "<li>None yet.</li>";
+  document.getElementById("reportGaps").innerHTML = gaps.length ? gaps.map(function(t) { return "<li>" + esc(t) + "</li>"; }).join("") : "<li>None. Checklist complete. The county still makes the final call.</li>";
   var next = [
-    "Close every gap above, then re-run this check.",
+    "Close every gap and human precheck above, then re-run this check.",
     "Submit through the county portal: " + c.portal + " (" + c.phone + ").",
     "Keep the approved set on the jobsite once issued, and schedule inspections at each phase."
   ];
-  document.getElementById("reportNext").innerHTML = next.map(function(t) { return "<li>" + t + "</li>"; }).join("");
+  document.getElementById("reportNext").innerHTML = next.map(function(t) { return "<li>" + esc(t) + "</li>"; }).join("");
   var r = document.getElementById("report");
   r.style.display = "block";
   r.scrollIntoView({ behavior: "smooth" });
